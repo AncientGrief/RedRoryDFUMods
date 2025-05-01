@@ -25,9 +25,9 @@ public class CombatEventHandlerTest : MonoBehaviour
             VcehWrapper.RegisterOnCalculateAttackDamage(OnCalculateAttackDamage);
     }
 
-    private ResultAttackDamageCalculated OnCalculateAttackDamage(AttackDamageCalculatedContext ctx)
+    private ResultCalculateAttackDamage OnCalculateAttackDamage(CalculateAttackDamageContext ctx)
     {
-        var result = new ResultAttackDamageCalculated
+        var result = new ResultCalculateAttackDamage
         {
             AttackDamage = ctx.CalculatedDamage
         };

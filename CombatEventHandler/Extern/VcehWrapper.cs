@@ -16,7 +16,7 @@ namespace VanillaCombatEventHandler
     {
         private static Mod vcehMod;
         private static string modName;
-        private static Func<AttackDamageCalculatedContext, ResultAttackDamageCalculated> onOnAttackDamageCalculated;
+        private static Func<CalculateAttackDamageContext, ResultCalculateAttackDamage> onCalculateAttackDamage;
 
         public static bool Init(string nameOfMod)
         {
@@ -25,23 +25,23 @@ namespace VanillaCombatEventHandler
             return vcehMod != null;
         }
 
-        public static void RegisterOnCalculateAttackDamage(Func<AttackDamageCalculatedContext, ResultAttackDamageCalculated> func)
+        public static void RegisterOnCalculateAttackDamage(Func<CalculateAttackDamageContext, ResultCalculateAttackDamage> func)
         {
             if (vcehMod == null)
                 return;
 
-            onOnAttackDamageCalculated = func;
+            onCalculateAttackDamage = func;
             ModManager.Instance.SendModMessage(vcehMod.Title, "onAttackDamageCalculated",
-                new Tuple<string,Func<object[], object[]>>(modName, OnAttackDamageInternal));
+                new Tuple<string,Func<object[], object[]>>(modName, OnCalculateAttackDamageInternal));
         }
 
-        private static object[] OnAttackDamageInternal(object[] p)
+        private static object[] OnCalculateAttackDamageInternal(object[] p)
         {
-            if (onOnAttackDamageCalculated == null)
+            if (onCalculateAttackDamage == null)
                 return null;
 
-            ResultAttackDamageCalculated result = onOnAttackDamageCalculated(
-                new AttackDamageCalculatedContext()
+            ResultCalculateAttackDamage result = onCalculateAttackDamage(
+                new CalculateAttackDamageContext()
                 {
                     Attacker = (DaggerfallEntity)p[0],
                     Target = (DaggerfallEntity)p[1],
@@ -56,7 +56,7 @@ namespace VanillaCombatEventHandler
         }
     }
 
-    public class AttackDamageCalculatedContext
+    public class CalculateAttackDamageContext
     {
         public DaggerfallEntity Attacker { get; set; }
         public DaggerfallEntity Target { get; set; }
@@ -67,7 +67,7 @@ namespace VanillaCombatEventHandler
         public int CalculatedDamage { get; set; }
     }
 
-    public class ResultAttackDamageCalculated
+    public class ResultCalculateAttackDamage
     {
         public int AttackDamage { get; set; }
     }
