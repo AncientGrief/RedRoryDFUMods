@@ -43,6 +43,7 @@ namespace VanillaCombatEventHandler
             if (onCalculateAttackDamage == null)
                 return null;
 
+            //Call the registered function
             ResultCalculateAttackDamage result = onCalculateAttackDamage(
                 new CalculateAttackDamageContext()
                 {
@@ -59,7 +60,7 @@ namespace VanillaCombatEventHandler
         }
         #endregion
 
-        #region OnSavingthrow
+        #region OnSavingThrow
         public static void RegisterOnSavingThrow(Func<SavingThrowContext, ResultSavingThrow> func)
         {
             if (vcehMod == null)
@@ -67,7 +68,27 @@ namespace VanillaCombatEventHandler
 
             onSavingThrow = func;
             ModManager.Instance.SendModMessage(vcehMod.Title, "onSavingThrow",
-                new Tuple<string,Func<object[], object[]>>(modName, OnCalculateAttackDamageInternal));
+                new Tuple<string,Func<object[], object[]>>(modName, OnSavingThrowInternal));
+        }
+
+        private static object[] OnSavingThrowInternal(object[] p)
+        {
+            if (onSavingThrow == null)
+                return null;
+
+            //Call the registered function
+            ResultSavingThrow result = onSavingThrow(
+                new SavingThrowContext()
+                {
+                    ElementType = (DFCareer.Elements)p[0],
+                    EffectFlags = (DFCareer.EffectFlags)p[1],
+                    Target = (DaggerfallEntity)p[2],
+                    Modifier = (int)p[3],
+                    CalculatedPercentDamageOrDuration = (int)p[4],
+                });
+
+            return new object[] { result.CalculatedPercentDamageOrDuration };
+
         }
         #endregion
     }
