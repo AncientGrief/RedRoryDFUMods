@@ -23,11 +23,11 @@ namespace Game.Mods.CombatEventHandler.Scripts.Events
         {
             if (!(data is Tuple<string, Func<object[], object[]>> regData))
             {
-                Debug.LogError($"VCEH: Can't register {Message} event handler; data is null or wrong format.");
+                Debug.LogError($"[VCEH] Can't register {Message} event handler; data is null or wrong format.");
                 return;
             }
 
-            Debug.Log($"VCEH: Mod {regData.Item1} successfully registered '{Message}'.");
+            Debug.Log($"[VCEH] Mod {regData.Item1} successfully registered '{Message}'.");
             OnSavingThrowCallbacks.Add(regData.Item2);
         }
 
@@ -49,7 +49,7 @@ namespace Game.Mods.CombatEventHandler.Scripts.Events
                 lastResult = func(ctx);
                 ctx[5] = lastResult[0]; //Add newly calculated value to the context for the next function
 
-                Debug.Log($"VCEH: OnSavingThrow new percent damage/duration={lastResult[0]}.");
+                Debug.Log($"[VCEH] OnSavingThrow new percent damage/duration={lastResult[0]}.");
             }
 
             return (int)lastResult[0];

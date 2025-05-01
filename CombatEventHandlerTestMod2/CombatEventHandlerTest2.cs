@@ -7,7 +7,7 @@ using DaggerfallWorkshop.Game.Utility.ModSupport;
 using UnityEngine;
 using VanillaCombatEventHandler;
 
-public class CombatEventHandlerTest : MonoBehaviour
+public class CombatEventHandlerTest2 : MonoBehaviour
 {
     static Mod mod;
     private VcehWrapper vcehWrapper;
@@ -17,7 +17,7 @@ public class CombatEventHandlerTest : MonoBehaviour
     {
         mod = initParams.Mod;
         var go = new GameObject(mod.Title);
-        go.AddComponent<CombatEventHandlerTest>();
+        go.AddComponent<CombatEventHandlerTest2>();
     }
 
     private void Awake()
@@ -40,8 +40,8 @@ public class CombatEventHandlerTest : MonoBehaviour
             || !(ctx.Target is EnemyEntity enemy))
             return result;
 
-        Debug.Log($"[VCEH] TestMod 1: damage = {enemy.MobileEnemy.ID}");
-        result.CalculatedDamage = enemy.MobileEnemy.ID;
+        Debug.Log($"[VCEH] TestMod 2: damage = {result.CalculatedDamage}/4 = {result.CalculatedDamage/4}");
+        result.CalculatedDamage /= 4;
 
         return result;
     }

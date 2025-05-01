@@ -13,14 +13,14 @@ using DaggerfallWorkshop.Game.Utility.ModSupport;
 
 namespace VanillaCombatEventHandler
 {
-    public static class VcehWrapper
+    public class VcehWrapper
     {
         private static Mod vcehMod;
         private static string modName;
-        private static Func<CalculateAttackDamageContext, ResultCalculateAttackDamage> onCalculateAttackDamage;
-        private static Func<SavingThrowContext, ResultSavingThrow> onSavingThrow;
+        private Func<CalculateAttackDamageContext, ResultCalculateAttackDamage> onCalculateAttackDamage;
+        private Func<SavingThrowContext, ResultSavingThrow> onSavingThrow;
 
-        public static bool Init(string nameOfMod)
+        public bool Init(string nameOfMod)
         {
             modName = nameOfMod;
             vcehMod = ModManager.Instance.GetModFromGUID("fb086c76-38e7-4d83-91dc-f29e6f1bb17e");
@@ -28,7 +28,7 @@ namespace VanillaCombatEventHandler
         }
 
         #region OnCalculateAttackDamage
-        public static void RegisterOnCalculateAttackDamage(Func<CalculateAttackDamageContext, ResultCalculateAttackDamage> func)
+        public void RegisterOnCalculateAttackDamage(Func<CalculateAttackDamageContext, ResultCalculateAttackDamage> func)
         {
             if (vcehMod == null)
                 return;
@@ -38,7 +38,7 @@ namespace VanillaCombatEventHandler
                 new Tuple<string,Func<object[], object[]>>(modName, OnCalculateAttackDamageInternal));
         }
 
-        private static object[] OnCalculateAttackDamageInternal(object[] p)
+        private object[] OnCalculateAttackDamageInternal(object[] p)
         {
             if (onCalculateAttackDamage == null)
                 return null;
@@ -61,7 +61,7 @@ namespace VanillaCombatEventHandler
         #endregion
 
         #region OnSavingThrow
-        public static void RegisterOnSavingThrow(Func<SavingThrowContext, ResultSavingThrow> func)
+        public void RegisterOnSavingThrow(Func<SavingThrowContext, ResultSavingThrow> func)
         {
             if (vcehMod == null)
                 return;
@@ -71,7 +71,7 @@ namespace VanillaCombatEventHandler
                 new Tuple<string,Func<object[], object[]>>(modName, OnSavingThrowInternal));
         }
 
-        private static object[] OnSavingThrowInternal(object[] p)
+        private object[] OnSavingThrowInternal(object[] p)
         {
             if (onSavingThrow == null)
                 return null;

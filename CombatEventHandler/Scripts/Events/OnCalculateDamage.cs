@@ -24,11 +24,11 @@ namespace Game.Mods.CombatEventHandler.Scripts.Events
         {
             if (!(data is Tuple<string, Func<object[], object[]>> regData))
             {
-                Debug.LogError($"VCEH: Can't register {Message} event handler; data is null or wrong format.");
+                Debug.LogError($"[VCEH] Can't register {Message} event handler; data is null or wrong format.");
                 return;
             }
 
-            Debug.Log($"VCEH: Mod {regData.Item1} successfully registered '{Message}'.");
+            Debug.Log($"[VCEH] Mod {regData.Item1} successfully registered '{Message}'.");
             OnCalculateAttackDamage.Add(regData.Item2);
         }
 
@@ -52,7 +52,7 @@ namespace Game.Mods.CombatEventHandler.Scripts.Events
                 lastResult = func(ctx);
                 ctx[5] = lastResult[0]; //Add newly calculated damage to the context for the next function
 
-                Debug.Log($"VCEH: OnAttackDamageCalculated new damage={lastResult[0]}.");
+                Debug.Log($"[VCEH] OnAttackDamageCalculated new damage={lastResult[0]}.");
             }
 
             return (int)lastResult[0];

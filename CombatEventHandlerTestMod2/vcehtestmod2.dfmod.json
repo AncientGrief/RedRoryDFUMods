@@ -1,0 +1,9 @@
+{
+    "ModTitle": "VCEH Test Mod 2",
+    "DFUnity_Version": "1.1.1",
+    "GUID": "ac395a39-233a-4eff-bdb9-8852f1090277",
+    "Files": [
+        "Assets/Game/Mods/CombatEventHandlerTestMod2/CombatEventHandlerTest2.cs",
+        "Assets/Game/Mods/CombatEventHandler/Extern/VcehWrapper.cs"
+    ]
+}
