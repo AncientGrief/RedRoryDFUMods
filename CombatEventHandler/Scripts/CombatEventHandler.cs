@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using DaggerfallWorkshop;
 using DaggerfallWorkshop.Game;
@@ -11,13 +12,13 @@ using DaggerfallWorkshop.Game.Utility.ModSupport;
 using DaggerfallWorkshop.Game.MagicAndEffects;
 using DaggerfallConnect;
 using DaggerfallWorkshop.Game.MagicAndEffects.MagicEffects;
+using Game.Mods.CombatEventHandler.Scripts.Events;
 
 public class CombatEventHandler : MonoBehaviour
 {
     static Mod mod;
 
     [Invoke(StateManager.StateTypes.Start, 0)]
-
     public static void Init(InitParams initParams)
     {
         mod = initParams.Mod;
@@ -25,11 +26,12 @@ public class CombatEventHandler : MonoBehaviour
         go.AddComponent<CombatEventHandler>();
     }
 
+    private List<IVcehEventBase> vcehEvents = new List<IVcehEventBase>();
+
     public static CombatEventHandler Instance;
 
     //VCEH - Attack event
-    //VCEH - Outputs Attacker, Target, Weapon, Body Part and Damage
-    private static readonly List<Func<object[], object[]>> OnAttackDamageCalculated = new List<Func<object[], object[]>>();
+    private static OnCalculateDamage onCalculateDamage;
 
     //Saving throw event
     //Outputs effect element, effect flags (Paralysis, etc), Target and Result
@@ -40,66 +42,28 @@ public class CombatEventHandler : MonoBehaviour
         if (Instance == null)
             Instance = this;
 
+        //Init all events and register DFU formulas
+        InitAllEvents();
+
         //VCEH - Register the custom formulae
-        FormulaHelper.RegisterOverride(mod, "CalculateAttackDamage", (Func<DaggerfallEntity, DaggerfallEntity, bool, int, DaggerfallUnityItem, int>)CalculateAttackDamage);
-        FormulaHelper.RegisterOverride(mod, "SavingThrow", (Func<DFCareer.Elements, DFCareer.EffectFlags, DaggerfallEntity, int, int>)SavingThrow);
+        //FormulaHelper.RegisterOverride(mod, "SavingThrow", (Func<DFCareer.Elements, DFCareer.EffectFlags, DaggerfallEntity, int, int>)SavingThrow);
 
         //VCEH - Set up the receiver
-        mod.MessageReceiver = MessageReceiver;
+        mod.MessageReceiver = (message, data, _) =>
+        {
+            IVcehEventBase e = vcehEvents.FirstOrDefault(x => x.Message == message);
+            e?.OnRegister(data);
+        };
 
         mod.IsReady = true;
     }
 
-    void MessageReceiver(string message, object data, DFModMessageCallback callBack)
+    private void InitAllEvents()
     {
-        switch (message)
-        {
-            //VCEH - Add sender to attack event listeners
-            case "onAttackDamageCalculated":
-                if (data is Tuple<string, Func<object[], object[]>> regData)
-                {
-                    Debug.Log($"VCEH: Mod {regData.Item1} registered onAttackDamageCalculated successfully.");
-                    OnAttackDamageCalculated.Add(regData.Item2);
-                }
-                else
-                    Debug.LogError("VCEH: Can't register onAttackDamageCalculated event handler; data is null or wrong format.");
-                break;
+        onCalculateDamage = new OnCalculateDamage();
+        onCalculateDamage.RegisterFormula(mod, CalculateAttackDamage);
 
-            //VCEH - Add sender to saving throw event listeners
-            case "onSavingThrow":
-                OnSavingThrow += data as Action<DFCareer.Elements, DFCareer.EffectFlags, DaggerfallEntity, int>;
-                break;
-
-            default:
-                Debug.LogErrorFormat("{0}: unknown message received ({1}).", this, message);
-                break;
-        }
-    }
-
-    private static int ExecuteAttackDamagePipeline(DaggerfallEntity attacker, DaggerfallEntity target,
-        bool isEnemyFacingAwayFromPlayer, int weaponAnimTime, DaggerfallUnityItem weapon, int damage)
-    {
-        //One could also add the vanilla damage for all subscribed mods so they can see the vanilla damage and the pipeline damage
-        object[] ctx =
-        {
-            attacker,
-            target,
-            isEnemyFacingAwayFromPlayer,
-            weaponAnimTime,
-            weapon,
-            damage
-        };
-
-        object[] lastResult = { damage };
-        foreach (var func in OnAttackDamageCalculated)
-        {
-            lastResult = func(ctx);
-            ctx[5] = lastResult[0]; //Add newly calculated damage to the context for the next function
-
-            Debug.Log($"VCEH: OnAttackDamageCalculated new damage={lastResult[0]}.");
-        }
-
-        return (int)lastResult[0];
+        vcehEvents.Add(onCalculateDamage);
     }
 
     //VCEH - Default CalculateAttackDamage formula from FormulaHelper
@@ -146,7 +110,7 @@ public class CombatEventHandler : MonoBehaviour
                 }
 
                 //VCEH - Attack event start
-                ExecuteAttackDamagePipeline(attacker, target, isEnemyFacingAwayFromPlayer, weaponAnimTime, weapon, damage);
+                onCalculateDamage.ExecuteAttackDamagePipeline(attacker, target, isEnemyFacingAwayFromPlayer, weaponAnimTime, weapon, damage);
                 //VCEH - Attack event end
 
                 return 0;
@@ -291,7 +255,7 @@ public class CombatEventHandler : MonoBehaviour
         //Debug.LogFormat("Damage {0} applied, animTime={1}  ({2})", damage, weaponAnimTime, GameManager.Instance.WeaponManager.ScreenWeapon.WeaponState);
 
         //VCEH - Attack event start
-        damage = ExecuteAttackDamagePipeline(attacker, target, isEnemyFacingAwayFromPlayer, weaponAnimTime, weapon, damage);
+        damage = onCalculateDamage.ExecuteAttackDamagePipeline(attacker, target, isEnemyFacingAwayFromPlayer, weaponAnimTime, weapon, damage);
         //VCEH - Attack event end
 
         //Damage dealt

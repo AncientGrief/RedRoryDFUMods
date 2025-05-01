@@ -31,7 +31,7 @@ namespace VanillaCombatEventHandler
                 return;
 
             onCalculateAttackDamage = func;
-            ModManager.Instance.SendModMessage(vcehMod.Title, "onAttackDamageCalculated",
+            ModManager.Instance.SendModMessage(vcehMod.Title, "onCalculateAttackDamage",
                 new Tuple<string,Func<object[], object[]>>(modName, OnCalculateAttackDamageInternal));
         }
 
