@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using DaggerfallWorkshop;
 using DaggerfallWorkshop.Game;
@@ -28,7 +29,7 @@ public class CombatEventHandler : MonoBehaviour
 
     //VCEH - Attack event
     //VCEH - Outputs Attacker, Target, Weapon, Body Part and Damage
-    public event Action<DaggerfallEntity, DaggerfallEntity, DaggerfallUnityItem, int, int> OnAttackDamageCalculated;
+    private static readonly List<Func<object[], object[]>> OnAttackDamageCalculated = new List<Func<object[], object[]>>();
 
     //Saving throw event
     //Outputs effect element, effect flags (Paralysis, etc), Target and Result
@@ -55,7 +56,13 @@ public class CombatEventHandler : MonoBehaviour
         {
             //VCEH - Add sender to attack event listeners
             case "onAttackDamageCalculated":
-                OnAttackDamageCalculated += data as Action<DaggerfallEntity, DaggerfallEntity, DaggerfallUnityItem, int, int>;
+                if (data is Tuple<string, Func<object[], object[]>> regData)
+                {
+                    Debug.Log($"VCEH: Mod {regData.Item1} registered onAttackDamageCalculated successfully.");
+                    OnAttackDamageCalculated.Add(regData.Item2);
+                }
+                else
+                    Debug.LogError("VCEH: Can't register onAttackDamageCalculated event handler; data is null or wrong format.");
                 break;
 
             //VCEH - Add sender to saving throw event listeners
@@ -67,6 +74,29 @@ public class CombatEventHandler : MonoBehaviour
                 Debug.LogErrorFormat("{0}: unknown message received ({1}).", this, message);
                 break;
         }
+    }
+
+    private static int PropagateOnAttackDamageCalculated(DaggerfallEntity attacker, DaggerfallEntity target,
+        bool isEnemyFacingAwayFromPlayer, int weaponAnimTime, DaggerfallUnityItem weapon, int damage)
+    {
+        object[] vanillaParameter =
+        {
+            attacker,
+            target,
+            isEnemyFacingAwayFromPlayer,
+            weaponAnimTime,
+            weapon,
+            damage
+        };
+
+        object[] lastResult = { damage };
+        foreach (var func in OnAttackDamageCalculated)
+        {
+            lastResult = func(vanillaParameter);
+            Debug.Log($"VCEH: OnAttackDamageCalculated new damage={lastResult[0]}.");
+        }
+
+        return (int)lastResult[0];
     }
 
     //VCEH - Default CalculateAttackDamage formula from FormulaHelper
@@ -113,8 +143,7 @@ public class CombatEventHandler : MonoBehaviour
                 }
 
                 //VCEH - Attack event start
-                if (Instance.OnAttackDamageCalculated != null)
-                    Instance.OnAttackDamageCalculated(attacker, target, weapon, 0, -1);
+                PropagateOnAttackDamageCalculated(attacker, target, isEnemyFacingAwayFromPlayer, weaponAnimTime, weapon, damage);
                 //VCEH - Attack event end
 
                 return 0;
@@ -259,8 +288,7 @@ public class CombatEventHandler : MonoBehaviour
         //Debug.LogFormat("Damage {0} applied, animTime={1}  ({2})", damage, weaponAnimTime, GameManager.Instance.WeaponManager.ScreenWeapon.WeaponState);
 
         //VCEH - Attack event start
-        if (Instance.OnAttackDamageCalculated != null)
-            Instance.OnAttackDamageCalculated(attacker, target, weapon, struckBodyPart, damage);
+        damage = PropagateOnAttackDamageCalculated(attacker, target, isEnemyFacingAwayFromPlayer, weaponAnimTime, weapon, damage);
         //VCEH - Attack event end
 
         //Damage dealt
