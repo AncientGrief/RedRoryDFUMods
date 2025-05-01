@@ -1,4 +1,5 @@
 using System;
+using DaggerfallConnect;
 using DaggerfallWorkshop.Game.Entity;
 using DaggerfallWorkshop.Game.Items;
 using DaggerfallWorkshop.Game.Utility.ModSupport;
@@ -17,6 +18,7 @@ namespace VanillaCombatEventHandler
         private static Mod vcehMod;
         private static string modName;
         private static Func<CalculateAttackDamageContext, ResultCalculateAttackDamage> onCalculateAttackDamage;
+        private static Func<SavingThrowContext, ResultSavingThrow> onSavingThrow;
 
         public static bool Init(string nameOfMod)
         {
@@ -25,6 +27,7 @@ namespace VanillaCombatEventHandler
             return vcehMod != null;
         }
 
+        #region OnCalculateAttackDamage
         public static void RegisterOnCalculateAttackDamage(Func<CalculateAttackDamageContext, ResultCalculateAttackDamage> func)
         {
             if (vcehMod == null)
@@ -51,10 +54,25 @@ namespace VanillaCombatEventHandler
                     CalculatedDamage = (int)p[5]
                 });
 
-            return new object[] { result.AttackDamage };
+            return new object[] { result.CalculatedDamage };
 
         }
+        #endregion
+
+        #region OnSavingthrow
+        public static void RegisterOnSavingThrow(Func<SavingThrowContext, ResultSavingThrow> func)
+        {
+            if (vcehMod == null)
+                return;
+
+            onSavingThrow = func;
+            ModManager.Instance.SendModMessage(vcehMod.Title, "onSavingThrow",
+                new Tuple<string,Func<object[], object[]>>(modName, OnCalculateAttackDamageInternal));
+        }
+        #endregion
     }
+
+    #region CalculateAttackDamage Context & Result
 
     public class CalculateAttackDamageContext
     {
@@ -69,6 +87,26 @@ namespace VanillaCombatEventHandler
 
     public class ResultCalculateAttackDamage
     {
-        public int AttackDamage { get; set; }
+        public int CalculatedDamage { get; set; }
     }
+    #endregion
+
+    #region Savingthrow Context & Result
+
+    public class SavingThrowContext
+    {
+        public DFCareer.Elements ElementType { get; set; }
+        public DFCareer.EffectFlags EffectFlags { get; set; }
+        public DaggerfallEntity Target { get; set; }
+        public int Modifier { get; set; }
+
+        public int CalculatedPercentDamageOrDuration { get; set; }
+    }
+
+    public class ResultSavingThrow
+    {
+        public int CalculatedPercentDamageOrDuration { get; set; }
+    }
+    #endregion
+
 }

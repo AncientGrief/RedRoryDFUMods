@@ -30,12 +30,9 @@ public class CombatEventHandler : MonoBehaviour
 
     public static CombatEventHandler Instance;
 
-    //VCEH - Attack event
+    //VCEH - Events
     private static OnCalculateDamage onCalculateDamage;
-
-    //Saving throw event
-    //Outputs effect element, effect flags (Paralysis, etc), Target and Result
-    public event Action<DFCareer.Elements, DFCareer.EffectFlags, DaggerfallEntity, int> OnSavingThrow;
+    private static OnSavingThrow onSavingThrow;
 
     void Awake()
     {
@@ -44,9 +41,6 @@ public class CombatEventHandler : MonoBehaviour
 
         //Init all events and register DFU formulas
         InitAllEvents();
-
-        //VCEH - Register the custom formulae
-        //FormulaHelper.RegisterOverride(mod, "SavingThrow", (Func<DFCareer.Elements, DFCareer.EffectFlags, DaggerfallEntity, int, int>)SavingThrow);
 
         //VCEH - Set up the receiver
         mod.MessageReceiver = (message, data, _) =>
@@ -63,7 +57,11 @@ public class CombatEventHandler : MonoBehaviour
         onCalculateDamage = new OnCalculateDamage();
         onCalculateDamage.RegisterFormula(mod, CalculateAttackDamage);
 
+        onSavingThrow = new OnSavingThrow();
+        onSavingThrow.RegisterFormula(mod, SavingThrow);
+
         vcehEvents.Add(onCalculateDamage);
+        vcehEvents.Add(onSavingThrow);
     }
 
     //VCEH - Default CalculateAttackDamage formula from FormulaHelper
@@ -110,10 +108,11 @@ public class CombatEventHandler : MonoBehaviour
                 }
 
                 //VCEH - Attack event start
-                onCalculateDamage.ExecuteAttackDamagePipeline(attacker, target, isEnemyFacingAwayFromPlayer, weaponAnimTime, weapon, damage);
+                //TODO: Mod devs should be able to alter damage here too, maybe add the reason why damage is 0 to the context (enum)?
+                damage = onCalculateDamage.ExecutePipeline(attacker, target, isEnemyFacingAwayFromPlayer, weaponAnimTime, weapon, damage);
                 //VCEH - Attack event end
 
-                return 0;
+                return damage;
             }
             // Get weapon skill used
             skillID = weapon.GetWeaponSkillIDAsShort();
@@ -255,7 +254,7 @@ public class CombatEventHandler : MonoBehaviour
         //Debug.LogFormat("Damage {0} applied, animTime={1}  ({2})", damage, weaponAnimTime, GameManager.Instance.WeaponManager.ScreenWeapon.WeaponState);
 
         //VCEH - Attack event start
-        damage = onCalculateDamage.ExecuteAttackDamagePipeline(attacker, target, isEnemyFacingAwayFromPlayer, weaponAnimTime, weapon, damage);
+        damage = onCalculateDamage.ExecutePipeline(attacker, target, isEnemyFacingAwayFromPlayer, weaponAnimTime, weapon, damage);
         //VCEH - Attack event end
 
         //Damage dealt
@@ -367,8 +366,7 @@ public class CombatEventHandler : MonoBehaviour
         int result = Mathf.Clamp(percentDamageOrDuration, 0, 100);
 
         //VCEH - Saving throw event start
-        if (Instance.OnSavingThrow != null)
-            Instance.OnSavingThrow(elementType,effectFlags,target,result);
+        result = onSavingThrow.ExecutePipeline(elementType, effectFlags, target, modifier, result);
         //VCEH - Saving throw event end
 
         return result;

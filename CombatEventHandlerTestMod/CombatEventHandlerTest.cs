@@ -29,7 +29,7 @@ public class CombatEventHandlerTest : MonoBehaviour
     {
         var result = new ResultCalculateAttackDamage
         {
-            AttackDamage = ctx.CalculatedDamage
+            CalculatedDamage = ctx.CalculatedDamage
         };
 
         if (ctx.Attacker == null
@@ -38,7 +38,7 @@ public class CombatEventHandlerTest : MonoBehaviour
             || !(ctx.Target is EnemyEntity enemy))
             return result;
 
-        result.AttackDamage = enemy.MobileEnemy.ID;
+        result.CalculatedDamage = enemy.MobileEnemy.ID;
 
         return result;
     }

@@ -32,7 +32,7 @@ namespace Game.Mods.CombatEventHandler.Scripts.Events
             OnCalculateAttackDamage.Add(regData.Item2);
         }
 
-        public int ExecuteAttackDamagePipeline(DaggerfallEntity attacker, DaggerfallEntity target,
+        public int ExecutePipeline(DaggerfallEntity attacker, DaggerfallEntity target,
             bool isEnemyFacingAwayFromPlayer, int weaponAnimTime, DaggerfallUnityItem weapon, int damage)
         {
             //One could also add the vanilla damage for all subscribed mods so they can see the vanilla damage and the pipeline damage
