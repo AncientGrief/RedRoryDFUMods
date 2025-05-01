@@ -25,7 +25,7 @@ namespace VanillaCombatEventHandler
             return vcehMod != null;
         }
 
-        public static void RegisterOnAttackDamage(Func<AttackDamageCalculatedContext, ResultAttackDamageCalculated> func)
+        public static void RegisterOnCalculateAttackDamage(Func<AttackDamageCalculatedContext, ResultAttackDamageCalculated> func)
         {
             if (vcehMod == null)
                 return;

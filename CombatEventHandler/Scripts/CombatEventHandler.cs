@@ -76,10 +76,11 @@ public class CombatEventHandler : MonoBehaviour
         }
     }
 
-    private static int PropagateOnAttackDamageCalculated(DaggerfallEntity attacker, DaggerfallEntity target,
+    private static int ExecuteAttackDamagePipeline(DaggerfallEntity attacker, DaggerfallEntity target,
         bool isEnemyFacingAwayFromPlayer, int weaponAnimTime, DaggerfallUnityItem weapon, int damage)
     {
-        object[] vanillaParameter =
+        //One could also add the vanilla damage for all subscribed mods so they can see the vanilla damage and the pipeline damage
+        object[] ctx =
         {
             attacker,
             target,
@@ -92,7 +93,9 @@ public class CombatEventHandler : MonoBehaviour
         object[] lastResult = { damage };
         foreach (var func in OnAttackDamageCalculated)
         {
-            lastResult = func(vanillaParameter);
+            lastResult = func(ctx);
+            ctx[5] = lastResult[0]; //Add newly calculated damage to the context for the next function
+
             Debug.Log($"VCEH: OnAttackDamageCalculated new damage={lastResult[0]}.");
         }
 
@@ -143,7 +146,7 @@ public class CombatEventHandler : MonoBehaviour
                 }
 
                 //VCEH - Attack event start
-                PropagateOnAttackDamageCalculated(attacker, target, isEnemyFacingAwayFromPlayer, weaponAnimTime, weapon, damage);
+                ExecuteAttackDamagePipeline(attacker, target, isEnemyFacingAwayFromPlayer, weaponAnimTime, weapon, damage);
                 //VCEH - Attack event end
 
                 return 0;
@@ -288,7 +291,7 @@ public class CombatEventHandler : MonoBehaviour
         //Debug.LogFormat("Damage {0} applied, animTime={1}  ({2})", damage, weaponAnimTime, GameManager.Instance.WeaponManager.ScreenWeapon.WeaponState);
 
         //VCEH - Attack event start
-        damage = PropagateOnAttackDamageCalculated(attacker, target, isEnemyFacingAwayFromPlayer, weaponAnimTime, weapon, damage);
+        damage = ExecuteAttackDamagePipeline(attacker, target, isEnemyFacingAwayFromPlayer, weaponAnimTime, weapon, damage);
         //VCEH - Attack event end
 
         //Damage dealt

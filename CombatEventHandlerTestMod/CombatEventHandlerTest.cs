@@ -21,11 +21,11 @@ public class CombatEventHandlerTest : MonoBehaviour
 
     private void Awake()
     {
-        VcehWrapper.Init(mod.Title);
-        VcehWrapper.RegisterOnAttackDamage(OnAttackDamage);
+        if(VcehWrapper.Init(mod.Title))
+            VcehWrapper.RegisterOnCalculateAttackDamage(OnCalculateAttackDamage);
     }
 
-    private ResultAttackDamageCalculated OnAttackDamage(AttackDamageCalculatedContext ctx)
+    private ResultAttackDamageCalculated OnCalculateAttackDamage(AttackDamageCalculatedContext ctx)
     {
         var result = new ResultAttackDamageCalculated
         {
